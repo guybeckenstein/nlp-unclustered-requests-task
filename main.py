@@ -11,19 +11,19 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 from sentence_transformers import SentenceTransformer, util
-from compare_clustering_solutions import evaluate_clustering
+# from compare_clustering_solutions import evaluate_clustering
 
 nltk.download('stopwords')
 nltk.download('wordnet')
 nltk.download('punkt')
 nltk.download('omw-1.4')
-lemmatizer = WordNetLemmatizer()
-stop_words = set(stopwords.words('english'))
+lemmatizer: WordNetLemmatizer = WordNetLemmatizer()
+stop_words: set = set(stopwords.words('english'))
 
-THRESHOLD = 0.631
+THRESHOLD: float = 0.631
 
 
-def extract_data_set(data_file):
+def extract_data_set(data_file: str) -> np.ndarray:
     """
     :param data_file: String of the relative path of our CSV dataset. We open it using Pandas package
     :return: A numpy vector, each value of it represents a sentence from the dataset. We filtered the file and used
@@ -31,7 +31,7 @@ def extract_data_set(data_file):
     """
 
     print(f'Step 1\t->\tFetching features-vector data (unrecognized requests) from {data_file}')
-    df = pd.read_csv(data_file)
+    df: pd = pd.read_csv(data_file)
     X = df['request'].values  # all requests
     return X
 
@@ -48,7 +48,7 @@ def get_sbert_model(X):
     return feature_vector
 
 
-def find_clusters(X, min_size):
+def find_clusters(X: np.ndarray, min_size: str) -> tuple:
     """
     :param X: X of the dataset - all requests we got. NDArray of strings
     :param min_size: a hyperparameter we got from the 'analyze_unrecognized_requests' function. Minimum size of cluster
@@ -64,7 +64,7 @@ def find_clusters(X, min_size):
 
     print(f'\t\t\tSentenceTransformer: community detection has found {len(clusters)} clusters!')
 
-    sentences_idx_lst = list(range(X.size))
+    sentences_idx_lst: list = list(range(X.size))
 
     # We create a set of all clustered indexes (for complexity reasons)
     clustered_idx_set = set()
@@ -72,7 +72,7 @@ def find_clusters(X, min_size):
         cluster_set = set(cluster)
         clustered_idx_set = clustered_idx_set.union(cluster_set)
     # Now we get all unclustered indexes
-    unclustered = [idx for idx in sentences_idx_lst if idx not in clustered_idx_set]
+    unclustered: list = [idx for idx in sentences_idx_lst if idx not in clustered_idx_set]
     print(f'\t\t\tThere are {len(unclustered)} unclustered requests, i.e., unresolved')
 
     return clusters, unclustered
@@ -138,7 +138,7 @@ def get_all_clusters_representatives(X, clusters, k):
     return clusters_representatives_matrix
 
 
-def get_clusters_names(X, clusters):
+def get_clusters_names(X, clusters) -> list:
     """
     :param X: X of the dataset - all requests we got. NDArray of strings
     :param clusters: A list L of lists l_i. Each l_i contains indexes of strings in X that belongs to cluster i.
@@ -152,11 +152,14 @@ def get_clusters_names(X, clusters):
 
     clusters_names_lst = []
 
-    possible_seq = [['NNS', 'NN'], ['NN', 'NN'], ['JJ', 'NNS'], ['VB', 'DT', 'NN'], ['VBG', 'NN'], ['VBN', 'NN'],
-                    ['NN', 'NNS'], ['VBN', 'IN', 'NN'], ['IN', 'DT', 'NN'], ['VB', 'DT', 'NN', 'NN'], ['NN', 'IN', 'NN'], ['VB', 'RB', 'TO', 'NN'],
-                    ['RB', 'NNS'], ['IN', 'DT', 'NN'], ['VBN', 'NN'], ['JJ', 'NNS'], ['JJ', 'VBP', 'DT'], ['NN', 'DT', 'NN'], ['VBN', 'IN', 'DT', 'NN'],
-                    ['VBN', 'TO', 'NN'], ['VB', 'IN', 'DT', 'NN'], ['VB', 'NNS'], ['VB', 'TO', 'DT', 'NN'], ['WP', 'PRP', 'VBP'], ['NN', 'TO', 'DT', 'NNS'],
-                    ['VB', 'DT', 'NN']]
+    possible_seq = [
+        ['NNS', 'NN'], ['NN', 'NN'], ['JJ', 'NNS'], ['VB', 'DT', 'NN'], ['VBG', 'NN'], ['VBN', 'NN'],
+        ['NN', 'NNS'], ['VBN', 'IN', 'NN'], ['IN', 'DT', 'NN'], ['VB', 'DT', 'NN', 'NN'],
+        ['NN', 'IN', 'NN'], ['VB', 'RB', 'TO', 'NN'], ['RB', 'NNS'], ['IN', 'DT', 'NN'], ['VBN', 'NN'],
+        ['JJ', 'NNS'], ['JJ', 'VBP', 'DT'], ['NN', 'DT', 'NN'], ['VBN', 'IN', 'DT', 'NN'],
+        ['VBN', 'TO', 'NN'], ['VB', 'IN', 'DT', 'NN'], ['VB', 'NNS'], ['VB', 'TO', 'DT', 'NN'],
+        ['WP', 'PRP', 'VBP'], ['NN', 'TO', 'DT', 'NNS'], ['VB', 'DT', 'NN']
+    ]
 
     for cluster_idx in range(len(clusters)):
         name = choose_cluster_label(X[clusters[cluster_idx]], cluster_idx)
@@ -164,10 +167,10 @@ def get_clusters_names(X, clusters):
     return clusters_names_lst
 
 
-def preprocess_text(text):
+def preprocess_text(text) -> list[str]:
     """
-    Preprocesses a string of text by converting it to lowercase, tokenizing it into individual words, removing stop words
-    and non-alphabetic characters, and lemmatizing the remaining words.
+    Preprocesses a string of text by converting it to lowercase, tokenizing it into individual words,
+    removing stop words and non-alphabetic characters, and lemmatizing the remaining words.
     :param text: The text to preprocess.
     :return: List[str]: The preprocessed list of words.
     """
@@ -247,7 +250,8 @@ def choose_cluster_label(X_cluster, cluster_idx):
     return my_sentence
 
 
-def create_final_json(X, clusters, unclustered, clusters_representatives_matrix, clusters_names_lst, output_file):
+def create_final_json(X, clusters, unclustered, clusters_representatives_matrix, clusters_names_lst, output_file: str) \
+        -> None:
     """
     Creates a new JSON file. Its name is 'output_file', and it's hierarchy is equal to the hierarchy of the ground
     truth JSON file.
@@ -281,7 +285,7 @@ def create_final_json(X, clusters, unclustered, clusters_representatives_matrix,
         json_output_file.write(json_output_object)
 
 
-def analyze_unrecognized_requests(data_file, output_file, num_rep, min_size):
+def analyze_unrecognized_requests(data_file: str, output_file: str, num_rep: str, min_size: str) -> None:
     """
     :param data_file: Our dataset
     :param output_file: Our relative full-qualified name, of our upcoming JSON output file.
@@ -289,7 +293,7 @@ def analyze_unrecognized_requests(data_file, output_file, num_rep, min_size):
     :param min_size: A string of the minimal size that each clustered-requests should have.
     :return: None
     """
-    X = extract_data_set(data_file)                                                                         # Step 1
+    X: np.ndarray = extract_data_set(data_file)                                                             # Step 1
     clusters, unclustered = find_clusters(X, min_size)                                                      # Step 2
     clusters_representatives = get_all_clusters_representatives(X, clusters, num_rep)                       # Step 3
     clusters_names_lst = get_clusters_names(X, clusters)                                                    # Step 4
@@ -297,7 +301,7 @@ def analyze_unrecognized_requests(data_file, output_file, num_rep, min_size):
     print("---")
 
 
-def my_clusters_representatives_and_labels_accuracy_rate(my_solution, output_solution):
+def my_clusters_representatives_and_labels_accuracy_rate(my_solution: json, output_solution: json) -> None:
     """
     A metric for evaluating parts 2 and 3. We know it is not the most accurate way, but it is good for intuition.
     :param my_solution: Our JSON file we are using to compute the accuracy of our representatives and labels.
@@ -306,10 +310,10 @@ def my_clusters_representatives_and_labels_accuracy_rate(my_solution, output_sol
     :param output_solution: The ground truth JSON file, we are using for this type of metric.
     :return: Prints both our representatives and labels accuracies (if they appear in the ground truth).
     """
-    representatives_success = 0
-    representatives_total = 0
-    labels_success = 0
-    labels_total = 0
+    representatives_success: int = 0
+    representatives_total: int = 0
+    labels_success: int = 0
+    labels_total: int = 0
     # We create a dictionary of our JSON file
     with open(my_solution) as my_file:
         my_data = json.load(my_file)
@@ -345,5 +349,4 @@ if __name__ == '__main__':
                                   config['num_of_representatives'],
                                   config['min_cluster_size'])
 
-    evaluate_clustering(config['example_solution_file'], config['output_file'])
-    # my_clusters_representatives_and_labels_accuracy_rate(config['output_file'], config['example_solution_file'])
+    # evaluate_clustering(config['example_solution_file'], config['output_file'])
