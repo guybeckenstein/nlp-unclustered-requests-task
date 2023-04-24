@@ -11,7 +11,7 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 from sentence_transformers import SentenceTransformer, util
-# from compare_clustering_solutions import evaluate_clustering
+from compare_clustering_solutions import evaluate_clustering
 
 nltk.download('stopwords')
 nltk.download('wordnet')
@@ -349,4 +349,4 @@ if __name__ == '__main__':
                                   config['num_of_representatives'],
                                   config['min_cluster_size'])
 
-    # evaluate_clustering(config['example_solution_file'], config['output_file'])
+    evaluate_clustering(config['example_solution_file'], config['output_file'])
